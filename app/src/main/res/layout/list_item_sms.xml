@@ -9,20 +9,30 @@
 
     <!-- Sender (Phone Number or Name) -->
     <TextView
-        android:id="@+id/tvSender"
+        android:id="@+id/senderTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#333333"
+        android:textStyle="bold"
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textColor="@android:color/black" />
 
     <!-- SMS Message Body -->
+
     <TextView
-        android:id="@+id/tvMessage"
+        android:id="@+id/messageTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="#666666"
         android:textSize="14sp"
-        android:paddingTop="5dp" />
+        android:paddingTop="4dp"
+        android:textColor="@android:color/black" />
+
+<!-- Date n time -->
+    <TextView
+        android:id="@+id/dateTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:paddingTop="4dp"
+        android:textColor="@android:color/black" />
 
 </LinearLayout>

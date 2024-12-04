@@ -1,19 +1,20 @@
 package com.example.msgs
 
+import android.Manifest
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.os.Bundle
+import android.provider.Telephony
+import android.widget.ListView
+import android.widget.Switch
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import android.Manifest
-import android.database.Cursor
-import android.provider.Telephony
-import android.widget.ArrayAdapter
-import android.widget.ListView
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,11 +31,28 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+
         if (checkSmsPermission()) {
             displaySms()
         } else {
             requestSmsPermission()
         }
+
+        val switchToBankMsgs= findViewById<Switch>(R.id.switchToBankMsgs)
+
+        switchToBankMsgs.setOnClickListener{
+            if (switchToBankMsgs.isChecked) {
+                Toast.makeText(applicationContext, "Showing bank Messages", Toast.LENGTH_SHORT).show()
+                displaySms(showBankMessages = true) // Filter for bank messages
+            }
+            else{
+                Toast.makeText(applicationContext, "Showing All Messages", Toast.LENGTH_SHORT).show()
+                displaySms(showBankMessages = false) // Show all messages
+
+            }
+        }
+
+
     }
 
 
@@ -66,14 +84,15 @@ override fun onRequestPermissionsResult(
             Toast.makeText(this, "SMS Permission Granted", Toast.LENGTH_SHORT).show()
             displaySms()    // Proceed with functionality that requires SMS permission
         } else {
-            Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Permission Denied - line 69", Toast.LENGTH_SHORT).show()
         }
     }
 }
-    private fun displaySms() {
-        val smsList = mutableListOf<Pair<String, String>>()
+    private fun displaySms(showBankMessages: Boolean = false) {
+        val smsList = mutableListOf<Triple<String, String, String>>() // Store sender, message, and date
         val listView = findViewById<ListView>(R.id.lvSms)
 
+        // getting the sms from mobile's db
         val cursor : Cursor?  = contentResolver.query(
             Telephony.Sms.CONTENT_URI,
             null,
@@ -82,49 +101,80 @@ override fun onRequestPermissionsResult(
             Telephony.Sms.DATE + " DESC"
         )
 
+        // cursor?.let { ... }
+        //: This checks if the cursor is not null (meaning the query was successful).
+        // If it is, the code inside the curly braces executes.
         cursor?.let {
             val addressColumn = it.getColumnIndex(Telephony.Sms.ADDRESS)
             val bodyColumn = it.getColumnIndex(Telephony.Sms.BODY)
+            val dateColumn = it.getColumnIndex(Telephony.Sms.DATE)
 
             while (it.moveToNext()) {
                 val sender = it.getString(addressColumn)
                 val message = it.getString(bodyColumn)
-                smsList.add(Pair(sender, message)) // Store as Pair(sender, message)
+                val dateMillis = it.getLong(dateColumn)
+                val date = android.text.format.DateFormat.format("dd-MM-yyyy hh:mm a", dateMillis) // Format date
+
+                //smsList.add(Triple(sender, message, date.toString())) // Store sender, message, and date
+
+                // Filter logic for bank messages
+                if (!showBankMessages || isBankMessage(sender,message)) {
+                    smsList.add(Triple(sender, message, date.toString())) // Store sender, message, and date
+                }
             }
             it.close()
         }
 
-        // Use the custom adapter
+        // Use the custom adapter to display sender, message, and date
         val adapter = SmsAdapter(this, R.layout.list_item_sms, smsList)
         listView.adapter = adapter
     }
 
-//    private fun displaySms() {
-//        val smsList = mutableListOf<String>()
-//        val listView = findViewById<ListView>(R.id.lvSms)
-//
-//        val cursor: Cursor? = contentResolver.query(
-//            Telephony.Sms.CONTENT_URI,
-//            null,
-//            null,
-//            null,
-//            Telephony.Sms.DATE + " DESC"
-//        )
-//
-//        cursor?.let {
-//            val addressColumn = it.getColumnIndex(Telephony.Sms.ADDRESS)
-//            val bodyColumn = it.getColumnIndex(Telephony.Sms.BODY)
-//
-//            while (it.moveToNext()) {
-//                val address = it.getString(addressColumn)
-//                val body = it.getString(bodyColumn)
-//                smsList.add("From: $address\nMessage: $body")
-//            }
-//            it.close()
-//        }
-//
-//        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, smsList)
-//        listView.adapter = adapter
-//    }
+    // Utility function to determine if a sender is a bank
+    private fun isBankMessage(sender: String, message: String): Boolean {
+        // Common patterns for bank sender IDs
+        val bankPatterns = listOf(
+            Regex("^[A-Za-z]{2,}-\\d{2,}$"),  // Example: "AX-12345"
+            Regex("^[A-Za-z]{3,}$"),         // Example: "ICICI", "SBI"
+            Regex("^[A-Za-z]{2,}\\d{1,}$"),  // Example: "ICICI1", "HDFC123"
+            Regex("^[A-Za-z]+\\d+$")         // Example: "Bank123", "MyBank456"
+        )
+
+        // Custom sender names (specific to region or known banks)
+        val knownBanks = listOf(
+            "ICICIBANK", "SBIBANK", "HDFCBANK", "AXISBANK", "PNB",
+            "CITIBANK", "BOB", "KOTAKBANK", "YESBANK", "IDFCFIRST"
+        )
+
+        // Keywords commonly found in bank messages
+        val bankKeywords = listOf(
+            "transaction", "debit", "credit", "account", "balance",
+            "payment", "statement", "otp", "loan", "bank"
+        )
+
+        // Check if sender contains only numbers (not a bank message)
+        if (sender.matches(Regex("^\\d+$"))) {
+            return false
+        }
+
+        // Check if sender matches any pattern
+        val matchesPattern = bankPatterns.any { pattern -> sender.matches(pattern) }
+
+        // Check if sender is in the known banks list (ignoring case)
+        val isKnownBank = knownBanks.any { bank -> sender.equals(bank, ignoreCase = true) }
+
+        // Check if message contains any bank-related keywords
+        val containsBankKeywords = bankKeywords.any { keyword ->
+            message.contains(keyword, ignoreCase = true)
+        }
+
+        // Return true if either sender or message matches bank criteria
+        return matchesPattern || isKnownBank || containsBankKeywords
+    }
+
+
+
+
 
 }
+
