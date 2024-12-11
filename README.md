@@ -100,5 +100,5 @@ SpendWise is built with a vision to simplify personal finance management by seam
 ---
 
 **Contact Us:**
-- Developer: [Sachinandan](https://github.com/sachin-bi)
+- Developers: [Akshat](https://github.com/sachin-bi), [Greeny](https://github.com/sachin-bi), [Sachin](https://github.com/sachin-bi)
 - Email: sachinandanp5@gmail.com

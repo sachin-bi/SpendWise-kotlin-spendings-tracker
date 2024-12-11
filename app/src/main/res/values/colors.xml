@@ -6,4 +6,7 @@
     <color name="teal_300">#7aebeb</color>
     <color name="teal_500">#1ec8c8</color>
 
+    <color name="debit_red">#ff5151</color>
+    <color name="credit_green">#21d296</color>
+
 </resources>

@@ -18,8 +18,8 @@ import androidx.fragment.app.Fragment
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+//private const val ARG_PARAM1 = "param1"
+//private const val ARG_PARAM2 = "param2"
 
 /**
  * A simple [Fragment] subclass.
@@ -31,8 +31,8 @@ class Messages : Fragment() {
     private val SMS_PERMISSION_CODE = 101
 
     // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+//    private var param1: String? = null
+//    private var param2: String? = null
 
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
@@ -104,11 +104,12 @@ class Messages : Fragment() {
     private fun displaySms(listView: ListView, showBankMessages: Boolean) {
         val smsList = mutableListOf<Triple<String, String, String>>() // Sender, message, date
 
+        // Query for only received messages
         val cursor: Cursor? = requireContext().contentResolver.query(
             Telephony.Sms.CONTENT_URI,
             null,
-            null,
-            null,
+            Telephony.Sms.TYPE + " = ?",
+            arrayOf(Telephony.Sms.MESSAGE_TYPE_INBOX.toString()),
             Telephony.Sms.DATE + " DESC"
         )
 
@@ -134,12 +135,11 @@ class Messages : Fragment() {
         val adapter = SmsAdapter(requireContext(), R.layout.list_item_sms, smsList)
         listView.adapter = adapter
     }
-
-        private fun isBankMessage(sender: String, message: String): Boolean {
+    private fun isBankMessage(sender: String, message: String): Boolean {
         // Common patterns for bank sender IDs
         val bankPatterns = listOf(
             Regex("^[A-Za-z]{2,}-\\d{2,}$"),  // Example: "AX-12345"
-            Regex("^[A-Za-z]{3,}$"),         // Example: "ICICI", "SBI"
+            Regex("^[A-Za-z]{3,}$"),           // Example: "ICICI", "SBI"
             Regex("^[A-Za-z]{2,}\\d{1,}$"),  // Example: "ICICI1", "HDFC123"
             Regex("^[A-Za-z]+\\d+$")         // Example: "Bank123", "MyBank456"
         )
@@ -150,11 +150,11 @@ class Messages : Fragment() {
             "CITIBANK", "BOB", "KOTAKBANK", "YESBANK", "IDFCFIRST"
         )
 
-        // Keywords commonly found in bank messages
-        val bankKeywords = listOf(
-            "transaction", "debit", "credit", "account", "balance",
-            "payment", "statement", "otp", "loan", "bank"
-        )
+        // Keywords indicating financial transactions
+        val transactionKeywords = listOf("credited", "debited", "withdrawn", "deposited", "transferred")
+
+        // Regex pattern to detect numeric amounts (e.g., "Rs. 5000", "$300", "INR 2500")
+        val amountPattern = Regex("\\b(?:Rs\\.?|INR|\\$)?\\s?\\d{1,}(?:,\\d{3})*(?:\\.\\d{1,2})?\\b")
 
         // Check if sender contains only numbers (not a bank message)
         if (sender.matches(Regex("^\\d+$"))) {
@@ -167,33 +167,78 @@ class Messages : Fragment() {
         // Check if sender is in the known banks list (ignoring case)
         val isKnownBank = knownBanks.any { bank -> sender.equals(bank, ignoreCase = true) }
 
-        // Check if message contains any bank-related keywords
-        val containsBankKeywords = bankKeywords.any { keyword ->
+        // Check if message contains transaction-related keywords
+        val containsTransactionKeywords = transactionKeywords.any { keyword ->
             message.contains(keyword, ignoreCase = true)
         }
 
-        // Return true if either sender or message matches bank criteria
-        return matchesPattern || isKnownBank || containsBankKeywords
+        // Check if message contains a numeric amount
+        val containsAmount = amountPattern.containsMatchIn(message)
+
+        // Return true if sender is valid and message indicates a financial transaction
+        return (matchesPattern || isKnownBank) && containsTransactionKeywords && containsAmount
     }
 
+//
+//        private fun isBankMessage(sender: String, message: String): Boolean {
+//        // Common patterns for bank sender IDs
+//        val bankPatterns = listOf(
+//            Regex("^[A-Za-z]{2,}-\\d{2,}$"),  // Example: "AX-12345"
+//            Regex("^[A-Za-z]{3,}$"),         // Example: "ICICI", "SBI"
+//            Regex("^[A-Za-z]{2,}\\d{1,}$"),  // Example: "ICICI1", "HDFC123"
+//            Regex("^[A-Za-z]+\\d+$")         // Example: "Bank123", "MyBank456"
+//        )
+//
+//        // Custom sender names (specific to region or known banks)
+//        val knownBanks = listOf(
+//            "ICICIBANK", "SBIBANK", "HDFCBANK", "AXISBANK", "PNB",
+//            "CITIBANK", "BOB", "KOTAKBANK", "YESBANK", "IDFCFIRST"
+//        )
+//
+//        // Keywords commonly found in bank messages
+//        val bankKeywords = listOf(
+//            "transaction", "debit", "credit", "account", "balance",
+//            "payment", "statement", "otp", "loan", "bank"
+//        )
+//
+//        // Check if sender contains only numbers (not a bank message)
+//        if (sender.matches(Regex("^\\d+$"))) {
+//            return false
+//        }
+//
+//        // Check if sender matches any pattern
+//        val matchesPattern = bankPatterns.any { pattern -> sender.matches(pattern) }
+//
+//        // Check if sender is in the known banks list (ignoring case)
+//        val isKnownBank = knownBanks.any { bank -> sender.equals(bank, ignoreCase = true) }
+//
+//        // Check if message contains any bank-related keywords
+//        val containsBankKeywords = bankKeywords.any { keyword ->
+//            message.contains(keyword, ignoreCase = true)
+//        }
+//
+//        // Return true if either sender or message matches bank criteria
+//        return matchesPattern || isKnownBank || containsBankKeywords
+//    }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment Messages.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            Messages().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }
+
+//    companion object {
+//        /**
+//         * Use this factory method to create a new instance of
+//         * this fragment using the provided parameters.
+//         *
+//         * @param param1 Parameter 1.
+//         * @param param2 Parameter 2.
+//         * @return A new instance of fragment Messages.
+//         */
+//        // TODO: Rename and change types and number of parameters
+//        @JvmStatic
+//        fun newInstance(param1: String, param2: String) =
+//            Messages().apply {
+//                arguments = Bundle().apply {
+//                    putString(ARG_PARAM1, param1)
+//                    putString(ARG_PARAM2, param2)
+//                }
+//            }
+//    }
 }
