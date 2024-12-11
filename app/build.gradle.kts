@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.msgs"
+    namespace = "com.example.spendwise"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.msgs"
+        applicationId = "com.example.spendwise"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

@@ -1,4 +1,4 @@
-package com.example.msgs
+package com.example.spendwise
 
 import android.content.Context
 import android.view.LayoutInflater

@@ -1,4 +1,4 @@
-package com.example.msgs
+package com.example.spendwise
 
 import org.junit.Test
 
