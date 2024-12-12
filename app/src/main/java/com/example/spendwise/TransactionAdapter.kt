@@ -8,9 +8,9 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import android.widget.BaseAdapter
 import com.example.spendwise.R
-import com.example.spendwise.model.Transaction
+import com.example.spendwise.model.TransactionData
 
-class TransactionAdapter(private val context: Context, private val transactions: List<Transaction>) : BaseAdapter() {
+class TransactionAdapter(private val context: Context, private val transactions: List<TransactionData>) : BaseAdapter() {
 
     override fun getCount(): Int = transactions.size
 

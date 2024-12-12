@@ -1,53 +1,17 @@
 package com.example.spendwise
 
+import android.content.Context
 import android.database.Cursor
-import android.os.Bundle
 import android.provider.Telephony
 import android.text.format.DateFormat
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ListView
-import com.example.spendwise.adapter.TransactionAdapter
 import com.example.spendwise.model.TransactionData
 
-class Transactions : Fragment() {
+object TransactionUtils {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_transactions, container, false)
-        val listView: ListView = view.findViewById(R.id.transaction_list)
-
-        // Sample transactions
-//        val transactionsData = listOf(
-//            TransactionData("₹5000.00", "22/11/2024", "11:00 PM", true),
-//            TransactionData("₹490.00", "22/11/2024", "10:40 AM", false),
-//            TransactionData("₹20.00", "22/11/2024", "10:00 AM", false),
-//            TransactionData("₹288.00", "21/11/2024", "09:21 PM", true),
-//            TransactionData("₹455.00", "21/11/2024", "10:56 AM", false)
-//        )
-
-        // Set adapter
-//        val adapter = TransactionAdapter(requireContext(), transactionsData)
-//        listView.adapter = adapter
-        displaySms2(listView,true)
-
-        return view
-    }
-
-
-    private fun displaySms2(listView: ListView, showBankMessages: Boolean) {
-        // data - how to access this transactions from home.kt
+    fun getTransactions(context: Context, showBankMessages: Boolean): List<TransactionData> {
         val transactions = mutableListOf<TransactionData>()
 
-        val cursor: Cursor? = requireContext().contentResolver.query(
+        val cursor: Cursor? = context.contentResolver.query(
             Telephony.Sms.CONTENT_URI,
             null,
             Telephony.Sms.TYPE + " = ?",
@@ -77,13 +41,11 @@ class Transactions : Fragment() {
             it.close()
         }
 
-//    val adapter = TransactionAdapter(requireContext(), R.layout.list_item_sms, transactions)
-//    val adapter = TransactionAdapter(requireContext(), transactions)
-        val adapter = TransactionAdapter(requireContext(), transactions)
-        listView.adapter = adapter
+        return transactions
     }
 
     private fun isBankMessage(sender: String, message: String): Boolean {
+        // Same logic as provided in Transactions fragment
         // Common patterns for bank sender IDs
         val bankPatterns = listOf(
             Regex("^[A-Za-z]{2,}-\\d{2,}$"),  // Example: "AX-12345"
@@ -124,8 +86,8 @@ class Transactions : Fragment() {
         return matchesPattern || isKnownBank || containsBankKeywords
     }
 
-
     private fun parseTransaction(sender: String, message: String, date: String, time: String): TransactionData? {
+        // Same logic as provided in Transactions fragment
         // Attempt to extract amount and determine if it's a credit or debit
         val amountRegex = Regex("\\b(?:Rs\\.?|INR)?\\s?(\\d+(?:\\.\\d{1,2})?)\\b", RegexOption.IGNORE_CASE)
         val creditKeywords = listOf("credited", "credit", "deposit")
@@ -149,5 +111,4 @@ class Transactions : Fragment() {
             null
         }
     }
-
 }
