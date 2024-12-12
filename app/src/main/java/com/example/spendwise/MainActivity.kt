@@ -1,16 +1,20 @@
 package com.example.spendwise
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.spendwise.databinding.ActivityMainBinding
 
 
 class MainActivity : AppCompatActivity() {
 
-    // private val SMS_PERMISSION_CODE = 101
+     private val SMS_PERMISSION_CODE = 101
     private lateinit var binding : ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +23,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
 //        setContentView(R.layout.activity_main)
         setContentView(binding.root)
+        // Check SMS permission when the activity starts
+        if (checkSmsPermission()) {
+            // Permission is granted
+            Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show()
+            // Proceed with functionality that requires SMS permission (if needed)
+        } else {
+            // Permission is not granted, request it
+            requestSmsPermission()
+        }
         replaceFragment(Home())
 
         binding.bottomNavigationView2.setOnItemSelectedListener {
@@ -77,22 +90,24 @@ class MainActivity : AppCompatActivity() {
         fragmentTransaction.commit()
     }
 
-//
-//private fun checkSmsPermission(): Boolean {
-//
-//    return ContextCompat.checkSelfPermission(
-//        this,
-//        Manifest.permission.READ_SMS
-//    ) == PackageManager.PERMISSION_GRANTED
-//}
-//
-//private fun requestSmsPermission() {
-//    ActivityCompat.requestPermissions(
-//        this,
-//        arrayOf(Manifest.permission.READ_SMS),
-//        SMS_PERMISSION_CODE
-//    )
-//}
+
+    // Check if SMS permission is granted
+    private fun checkSmsPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_SMS
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    // Request SMS permission
+    private fun requestSmsPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_SMS),
+            SMS_PERMISSION_CODE
+        )
+    }
+
 //
 //override fun onRequestPermissionsResult(
 //    requestCode: Int,

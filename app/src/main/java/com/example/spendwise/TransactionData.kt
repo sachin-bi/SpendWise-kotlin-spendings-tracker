@@ -1,6 +1,8 @@
 package com.example.spendwise.model
 
-data class Transaction(
+data class TransactionData(
+    val sender: String,
+    val messageBody: String,
     val amount: String,
     val date: String,
     val time: String,
