@@ -44,7 +44,9 @@ class Transactions : Fragment() {
 
 
     private fun displaySms2(listView: ListView, showBankMessages: Boolean) {
+
         // data - how to access this transactions from home.kt
+
         val transactions = mutableListOf<TransactionData>()
 
         val cursor: Cursor? = requireContext().contentResolver.query(
