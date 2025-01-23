@@ -9,4 +9,8 @@
     <color name="debit_red">#ff5151</color>
     <color name="credit_green">#21d296</color>
 
+    <color name="creditColor">#4CAF50</color> <!-- Green for credits -->
+    <color name="debitColor">#F44336</color> <!-- Red for debits -->
+
+
 </resources>
