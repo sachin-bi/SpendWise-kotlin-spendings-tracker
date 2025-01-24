@@ -87,11 +87,19 @@ class Home : Fragment() {
         val creditEntries = ArrayList<BarEntry>()
         val debitEntries = ArrayList<BarEntry>()
         val labels = ArrayList<String>()
+        // here change the label : eg 22-01-2025 to 22'Wed
+
+        val inputDateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val outputDateFormat = SimpleDateFormat("dd''EEE", Locale.getDefault()) // Format to `22'Wed`
 
         weeklySummary.forEachIndexed { index, summary ->
             creditEntries.add(BarEntry(index.toFloat(), summary.totalCredit))
             debitEntries.add(BarEntry(index.toFloat(), summary.totalDebit))
-            labels.add(summary.date)
+
+            // Convert date format
+            val date = inputDateFormat.parse(summary.date)
+            val formattedDate = outputDateFormat.format(date!!)
+            labels.add(formattedDate)
         }
 
         val creditDataSet = BarDataSet(creditEntries, "Credits").apply {
@@ -101,24 +109,29 @@ class Home : Fragment() {
             color = resources.getColor(R.color.debitColor, null)
         }
 
-        val barData = BarData(creditDataSet, debitDataSet).apply {
+        // for double bar.
+        val barData = BarData(creditDataSet,debitDataSet).apply {
             barWidth = 0.3f // Width of each bar
         }
 
         barChart.apply {
             data = barData
-            groupBars(0f, 0.4f, 0.05f) // Group the bars
             xAxis.apply {
                 valueFormatter = IndexAxisValueFormatter(labels)
                 position = XAxis.XAxisPosition.BOTTOM
                 granularity = 1f
                 isGranularityEnabled = true
                 setDrawGridLines(false)
+                //axisMinimum = 0f
+                //axisMaximum = weeklySummary.size.toFloat() - 0.5f
+
             }
+            groupBars(-0.5f, 0.3f, 0.05f)
+            setVisibleXRangeMaximum(7f)
             axisRight.isEnabled = false
             description.isEnabled = false
             animateY(1000)
-            invalidate() // Refresh chart
+            invalidate()
         }
     }
 
